@@ -1,6 +1,6 @@
 [project]
 name = "dlt-openlineage"
-version = "0.1.0"
+version = "0.1.1"
 description = "OpenLineage integration for dlt (data load tool)"
 readme = "README.md"
 requires-python = ">= 3.9"
