@@ -1,0 +1,69 @@
+[project]
+name = "dlt-openlineage"
+version = "0.1.0"
+description = "OpenLineage integration for dlt (data load tool)"
+readme = "README.md"
+requires-python = ">= 3.9"
+license = { text = "MIT" }
+authors = [
+    { name = "Sidequery", email = "hello@sidequery.com" }
+]
+keywords = ["dlt", "openlineage", "marquez", "data-lineage", "data-engineering"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Database",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "dlt>=1.0.0",
+    "openlineage-python>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/sidequery/dlt-openlineage"
+Repository = "https://github.com/sidequery/dlt-openlineage"
+Issues = "https://github.com/sidequery/dlt-openlineage/issues"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-mock",
+    "ruff",
+    "mypy",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dlt_openlineage"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+
+[tool.mypy]
+python_version = "3.9"
+strict = true
+
+[dependency-groups]
+dev = [
+    "dlt[duckdb]>=1.12.1",
+    "mypy>=1.19.1",
+    "pytest>=8.4.2",
+    "pytest-mock>=3.15.1",
+    "ruff>=0.15.0",
+]
