@@ -80,7 +80,45 @@ This package implements dlt's `SupportsTracking` protocol and registers via `dlt
 | Any step failure | RunEvent(FAIL) | Error message and stack trace |
 | Pipeline end (no load) | RunEvent(COMPLETE) | Fallback terminal event from pipeline schema |
 
-Output dataset namespaces are derived from the destination (e.g., `duckdb://local`, `postgres://host:5432`), and dataset names are qualified with the dataset name (e.g., `raw_data.users`).
+## What Gets Emitted
+
+### Input datasets
+
+Input datasets are derived from dlt's `ExtractInfo.metrics`, which tracks which tables/resources were extracted. These are the table names as dlt sees them after extraction (i.e., the resource names or table names from `table_metrics`). Internal dlt tables (`_dlt_loads`, `_dlt_version`, etc.) are filtered out.
+
+Input datasets appear in both the RUNNING event (after extract) and the COMPLETE event (after load), so lineage consumers can see the full input-to-output picture on the terminal event.
+
+Inputs are namespaced with the configured namespace (defaults to `"dlt"`), not the destination, since they represent the logical source data before loading.
+
+### Output datasets
+
+Output datasets are built from `LoadInfo.load_packages`, which lists every completed load job with its target table name. Each output dataset includes:
+
+- **Namespace**: derived from the destination type and fingerprint, e.g. `duckdb://local`, `postgres://myhost.com`, `bigquery://project-id`
+- **Name**: qualified as `{dataset_name}.{table_name}`, e.g. `raw_data.users`, `raw_data.orders`
+- **Schema facet**: column names and dlt data types (e.g. `bigint`, `text`, `decimal`) from the pipeline's default schema
+- **Row counts**: per-table row counts from the normalize step's `NormalizeInfo.row_counts`
+
+If `LoadInfo` isn't available (e.g. extract-only runs), output datasets fall back to the pipeline's `default_schema.tables`.
+
+### Important: dlt reshaping and what that means for lineage
+
+dlt aggressively reshapes data between extract and load. This affects what shows up in lineage:
+
+- **Nested data is flattened**: dlt unnests JSON objects and arrays into separate tables. A resource `users` with a nested `addresses` array becomes two destination tables: `users` and `users__addresses`. Both appear as output datasets. The input side just shows `users` (the original resource name).
+- **Column names are normalized**: dlt converts column names to snake_case and applies naming conventions. The schema facet reflects the normalized names as they exist in the destination, not the original source field names.
+- **Column types are dlt types**: schema facets use dlt's internal type system (`bigint`, `text`, `double`, `complex`, `date`, `timestamp`, `wei`, etc.), not the destination's native SQL types.
+- **No column-level lineage**: because dlt's reshaping (flattening, renaming, type coercion) isn't tracked as a transformation DAG, we emit table-level lineage only. There is no `ColumnLineageDatasetFacet`. This is an honest representation: we can tell you that `users` resource produced the `raw_data.users` and `raw_data.users__addresses` tables, but we can't trace individual columns through dlt's normalizer.
+- **Internal tables are excluded**: dlt creates `_dlt_loads`, `_dlt_pipeline_state`, `_dlt_version`, and similar bookkeeping tables. These are filtered from both input and output datasets.
+
+### Run and job facets
+
+Every event includes:
+
+- **`jobType`**: `{processingType: "BATCH", integration: "DLT", jobType: "PIPELINE"}`
+- **`processing_engine`**: dlt version and adapter version
+- **`dlt_execution`** (custom facet, on COMPLETE): current step, destination type/name, dataset name, total/failed job counts
+- **`errorMessage`** (on FAIL): error message, programming language, stack trace (the string representation dlt provides)
 
 ## Testing with Marquez
 
