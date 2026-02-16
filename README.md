@@ -4,8 +4,8 @@ OpenLineage integration for [dlt](https://dlthub.com/) pipelines. Automatically 
 
 ## Features
 
-- **Input/output dataset lineage**: Track which tables a pipeline reads and writes
-- **Schema capture**: Column names and types for each destination table
+- **Table-level lineage**: Track which resources a pipeline extracts and which destination tables it writes (no column-level lineage, see [reshaping notes](#important-dlt-reshaping-and-what-that-means-for-lineage))
+- **Schema capture**: Column names and dlt data types for each destination table
 - **Row counts**: Per-table row counts from the normalize step
 - **Destination-aware namespaces**: Output datasets namespaced by destination type and fingerprint
 - **Per-step events**: START, RUNNING (extract), COMPLETE (load), FAIL events
